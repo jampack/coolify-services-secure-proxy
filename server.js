@@ -1,14 +1,19 @@
-const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-require('dotenv').config();
+const express = require("express");
+const { createProxyMiddleware } = require("http-proxy-middleware");
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
+const TARGET_URL = process.env.TARGET_URL;
 const BEARER_TOKEN = process.env.BEARER_TOKEN;
 
+if (!TARGET_URL) {
+  console.error("ERROR: TARGET_URL environment variable is required");
+  process.exit(1);
+}
+
 if (!BEARER_TOKEN) {
-  console.error('ERROR: BEARER_TOKEN environment variable is required');
+  console.error("ERROR: BEARER_TOKEN environment variable is required");
   process.exit(1);
 }
 
@@ -16,30 +21,32 @@ if (!BEARER_TOKEN) {
 app.use(express.json());
 
 // Health check endpoint (no auth required) - must be defined before auth middleware
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'ollama-proxy' });
+app.get("/proxy/health", (req, res) => {
+  res.json({ status: "ok", service: "api-proxy" });
 });
 
 // Bearer token authentication middleware
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized: Bearer token required' });
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ error: "Unauthorized: Bearer token required" });
   }
-  
+
   const token = authHeader.substring(7);
-  
+
   if (token !== BEARER_TOKEN) {
-    return res.status(403).json({ error: 'Forbidden: Invalid token' });
+    return res.status(403).json({ error: "Forbidden: Invalid token" });
   }
-  
+
   next();
 };
 
-// Apply authentication to all routes except /health
+// Apply authentication to all routes except /proxy/health
 app.use((req, res, next) => {
-  if (req.path === '/health') {
+  if (req.path === "/proxy/health") {
     return next();
   }
   authenticate(req, res, next);
@@ -47,48 +54,39 @@ app.use((req, res, next) => {
 
 // Proxy configuration
 const proxyOptions = {
-  target: OLLAMA_URL,
+  target: TARGET_URL,
   changeOrigin: true,
-  pathRewrite: {
-    '^/api': '/api', // Keep /api prefix
+  filter: (pathname, req) => {
+    // Exclude /proxy/health from proxying
+    return pathname !== "/proxy/health";
   },
   onProxyReq: (proxyReq, req, res) => {
-    // Remove authorization header before forwarding to Ollama
-    proxyReq.removeHeader('authorization');
-    
+    // Remove authorization header before forwarding to target service
+    proxyReq.removeHeader("authorization");
+
     // Forward original headers (except authorization)
     if (req.body && Object.keys(req.body).length > 0) {
       const bodyData = JSON.stringify(req.body);
-      proxyReq.setHeader('Content-Type', 'application/json');
-      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+      proxyReq.setHeader("Content-Type", "application/json");
+      proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
       proxyReq.write(bodyData);
     }
   },
   onError: (err, req, res) => {
-    console.error('Proxy error:', err.message);
-    res.status(502).json({ 
-      error: 'Bad Gateway', 
-      message: 'Failed to connect to Ollama service' 
+    console.error("Proxy error:", err.message);
+    res.status(502).json({
+      error: "Bad Gateway",
+      message: "Failed to connect to target service",
     });
   },
-  logLevel: 'warn',
+  logLevel: "warn",
 };
 
-// Proxy all /api/* routes to Ollama
-app.use('/api', createProxyMiddleware(proxyOptions));
+// Proxy all routes to target service (paths forwarded as-is)
+app.use("/", createProxyMiddleware(proxyOptions));
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({ 
-    service: 'Ollama API Proxy',
-    version: '1.0.0',
-    message: 'Use /api/* endpoints to access Ollama API'
-  });
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Secure API Proxy running on port ${PORT}`);
+  console.log(`Proxying to target service at: ${TARGET_URL}`);
+  console.log("Bearer token authentication enabled");
 });
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Ollama Proxy Server running on port ${PORT}`);
-  console.log(`Proxying to Ollama at: ${OLLAMA_URL}`);
-  console.log('Bearer token authentication enabled');
-});
-

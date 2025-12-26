@@ -1,16 +1,18 @@
 {
-  "name": "ollama-proxy",
+  "name": "secure-api-proxy",
   "version": "1.0.0",
-  "description": "Secure proxy for Ollama API with Bearer token authentication",
+  "description": "Generic secure API proxy with Bearer token authentication",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
   },
   "keywords": [
-    "ollama",
     "proxy",
     "api",
+    "secure",
+    "bearer",
+    "authentication",
     "coolify"
   ],
   "author": "",

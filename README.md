@@ -1,21 +1,22 @@
-# Ollama API Proxy
+# Secure API Proxy
 
-A secure proxy server for Ollama API with Bearer token authentication. Designed for Coolify deployment.
+A generic secure proxy server with Bearer token authentication. Designed for Coolify deployment, this proxy can secure any HTTP/HTTPS service that lacks built-in authentication.
 
 ## Features
 
 - 🔒 Bearer token authentication
-- 🔄 Full API proxying to Ollama
+- 🔄 Full path forwarding (all paths proxied as-is)
 - 🐳 Docker-ready for Coolify
 - 🏥 Health check endpoint
 - ⚡ Lightweight and fast
+- 🌐 Works with any HTTP/HTTPS service
 
 ## Configuration
 
 Set the following environment variables:
 
 - `PORT` - Port for the proxy server (default: 3000)
-- `OLLAMA_URL` - Ollama service URL (default: http://localhost:11434)
+- `TARGET_URL` - Target service URL (required, e.g., `http://service-name:port`)
 - `BEARER_TOKEN` - Required bearer token for authentication
 
 ## Usage
@@ -29,8 +30,9 @@ npm install
 
 2. Create `.env` file:
 ```bash
-cp .env.example .env
-# Edit .env and set your BEARER_TOKEN
+PORT=3000
+TARGET_URL=http://localhost:8080
+BEARER_TOKEN=your-secure-token-here
 ```
 
 3. Start the server:
@@ -42,7 +44,7 @@ npm start
 
 1. Build the image:
 ```bash
-docker build -t ollama-proxy .
+docker build -t secure-api-proxy .
 ```
 
 2. Run the container:
@@ -50,8 +52,8 @@ docker build -t ollama-proxy .
 docker run -d \
   -p 3000:3000 \
   -e BEARER_TOKEN=your-secure-token \
-  -e OLLAMA_URL=http://ollama:11434 \
-  ollama-proxy
+  -e TARGET_URL=http://target-service:8080 \
+  secure-api-proxy
 ```
 
 ### Coolify Setup
@@ -60,19 +62,28 @@ docker run -d \
 2. Connect your repository
 3. Set environment variables:
    - `BEARER_TOKEN` - Your secure token
-   - `OLLAMA_URL` - Your Ollama service URL (e.g., `http://ollama:11434` if using service name)
+   - `TARGET_URL` - Your target service URL (use container/service name, e.g., `http://ollama-api:11434`)
 4. Deploy
+
+**Note:** In Coolify, containers on the same network can communicate using their container/service names. Use the target container name as the hostname in `TARGET_URL`.
+
+## How It Works
+
+- All requests to the proxy are forwarded to `TARGET_URL` with the same path
+- Example: `GET /api/users` → `GET http://target-service:port/api/users`
+- The Bearer token is validated but removed before forwarding to the target service
+- Paths are forwarded exactly as received (no rewriting)
 
 ## API Usage
 
 All requests must include the Bearer token in the Authorization header:
 
 ```bash
+# Example: Proxying to an API service
 curl -H "Authorization: Bearer your-token" \
-  http://localhost:3000/api/tags
-```
+  http://localhost:3000/api/endpoint
 
-```bash
+# Example: Proxying to Ollama
 curl -H "Authorization: Bearer your-token" \
   -H "Content-Type: application/json" \
   -d '{"model": "llama2", "prompt": "Hello"}' \
@@ -81,14 +92,33 @@ curl -H "Authorization: Bearer your-token" \
 
 ## Endpoints
 
-- `GET /health` - Health check (no auth required)
-- `GET /` - Service info (requires auth)
-- `GET /api/*` - All Ollama API endpoints (requires auth)
+- `GET /proxy/health` - Health check (no auth required)
+- `*` - All other paths are proxied to the target service (requires auth)
+
+## Examples
+
+### Proxying Ollama
+```bash
+TARGET_URL=http://ollama-api:11434
+# Access via: https://your-proxy.com/api/generate
+```
+
+### Proxying a REST API
+```bash
+TARGET_URL=http://api-service:8080
+# Access via: https://your-proxy.com/v1/users
+```
+
+### Proxying Any Service
+```bash
+TARGET_URL=http://internal-service:3000
+# All paths forwarded as-is
+```
 
 ## Security Notes
 
 - Always use a strong, randomly generated token in production
 - Keep your `BEARER_TOKEN` secret and never commit it to version control
-- The proxy removes the authorization header before forwarding to Ollama
+- The proxy removes the authorization header before forwarding to the target service
 - Consider using HTTPS in production (configure in Coolify)
-
+- The target service should not be directly accessible from the internet
