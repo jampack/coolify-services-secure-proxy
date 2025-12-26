@@ -25,11 +25,13 @@ Set the following environment variables:
 ### Local Development
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Create `.env` file:
+
 ```bash
 PORT=3000
 TARGET_URL=http://localhost:8080
@@ -37,6 +39,7 @@ BEARER_TOKEN=your-secure-token-here
 ```
 
 3. Start the server:
+
 ```bash
 npm start
 ```
@@ -44,11 +47,13 @@ npm start
 ### Docker/Coolify Deployment
 
 1. Build the image:
+
 ```bash
 docker build -t secure-api-proxy .
 ```
 
 2. Run the container:
+
 ```bash
 docker run -d \
   -p 3000:3000 \
@@ -99,18 +104,21 @@ curl -H "Authorization: Bearer your-token" \
 ## Examples
 
 ### Proxying Ollama
+
 ```bash
 TARGET_URL=http://ollama-api:11434
 # Access via: https://your-proxy.com/api/generate
 ```
 
 ### Proxying a REST API
+
 ```bash
 TARGET_URL=http://api-service:8080
 # Access via: https://your-proxy.com/v1/users
 ```
 
 ### Proxying Any Service
+
 ```bash
 TARGET_URL=http://internal-service:3000
 # All paths forwarded as-is
