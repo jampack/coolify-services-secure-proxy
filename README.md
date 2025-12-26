@@ -18,7 +18,7 @@ Set the following environment variables:
 - `PORT` - Port for the proxy server (default: 3000)
 - `TARGET_URL` - Target service URL (required, e.g., `http://service-name:port`)
 - `BEARER_TOKEN` - Required bearer token for authentication
-- `SERVICE_NAME` - Service name shown in health check (default: "secure-api-proxy")
+- `TARGET_SERVICE_NAME` - Target service name shown in health check (default: "target-service")
 
 ## Usage
 

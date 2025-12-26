@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const TARGET_URL = process.env.TARGET_URL;
 const BEARER_TOKEN = process.env.BEARER_TOKEN;
-const SERVICE_NAME = process.env.SERVICE_NAME || "secure-api-proxy";
+const TARGET_SERVICE_NAME = process.env.TARGET_SERVICE_NAME || "target-service";
 
 if (!TARGET_URL) {
   console.error("ERROR: TARGET_URL environment variable is required");
@@ -23,7 +23,7 @@ app.use(express.json());
 
 // Health check endpoint (no auth required) - must be defined before auth middleware
 app.get("/proxy/health", (req, res) => {
-  res.json({ status: "ok", service: SERVICE_NAME });
+  res.json({ status: "ok", service: TARGET_SERVICE_NAME });
 });
 
 // Bearer token authentication middleware
