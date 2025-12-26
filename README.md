@@ -22,46 +22,6 @@ Set the following environment variables:
 
 ## Usage
 
-### Local Development
-
-1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. Create `.env` file:
-
-```bash
-PORT=3000
-TARGET_URL=http://localhost:8080
-BEARER_TOKEN=your-secure-token-here
-```
-
-3. Start the server:
-
-```bash
-npm start
-```
-
-### Docker/Coolify Deployment
-
-1. Build the image:
-
-```bash
-docker build -t secure-api-proxy .
-```
-
-2. Run the container:
-
-```bash
-docker run -d \
-  -p 3000:3000 \
-  -e BEARER_TOKEN=your-secure-token \
-  -e TARGET_URL=http://target-service:8080 \
-  secure-api-proxy
-```
-
 ### Coolify Setup
 
 1. Create a new application in Coolify
@@ -122,6 +82,28 @@ TARGET_URL=http://api-service:8080
 ```bash
 TARGET_URL=http://internal-service:3000
 # All paths forwarded as-is
+```
+
+### Local Development
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create `.env` file:
+
+```bash
+PORT=3000
+TARGET_URL=http://localhost:8080
+BEARER_TOKEN=your-secure-token-here
+```
+
+3. Start the server:
+
+```bash
+npm start
 ```
 
 ## Security Notes
