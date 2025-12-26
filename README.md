@@ -1,4 +1,4 @@
-# Secure API Proxy
+# Coolify Secure API Proxy
 
 A generic secure proxy server with Bearer token authentication. Designed for Coolify deployment, this proxy can secure any HTTP/HTTPS service that lacks built-in authentication.
 
