@@ -10,6 +10,7 @@ A generic secure proxy server with Bearer token authentication. Designed for Coo
 - 🏥 Health check endpoint
 - ⚡ Lightweight and fast
 - 🌐 Works with any HTTP/HTTPS service
+- 🌍 Configurable CORS support for browser requests
 
 ## Configuration
 
@@ -19,6 +20,18 @@ Set the following environment variables:
 - `TARGET_URL` - Target service URL (required, e.g., `http://service-name:port`)
 - `BEARER_TOKEN` - Required bearer token for authentication
 - `TARGET_SERVICE_NAME` - Target service name shown in health check (default: "target-service")
+
+### CORS Configuration (Optional)
+
+To enable CORS for browser requests, set the following:
+
+- `CORS_ENABLED` - Enable CORS support (set to `"true"` to enable, default: disabled)
+- `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed origins (e.g., `"https://example.com,https://app.example.com"`). Use `"*"` to allow all origins (not recommended for production)
+- `CORS_ALLOWED_METHODS` - Comma-separated list of allowed HTTP methods (default: `"GET,POST,PUT,DELETE,PATCH,OPTIONS"`)
+- `CORS_ALLOWED_HEADERS` - Comma-separated list of allowed headers (default: `"Content-Type,Authorization"`)
+- `CORS_CREDENTIALS` - Allow credentials in CORS requests (set to `"true"` to enable, default: disabled)
+
+**Note:** If `CORS_ENABLED=true` but `CORS_ALLOWED_ORIGINS` is not set, all origins will be allowed.
 
 ## Usage
 
@@ -54,6 +67,28 @@ curl -H "Authorization: Bearer your-token" \
   -H "Content-Type: application/json" \
   -d '{"model": "llama2", "prompt": "Hello"}' \
   http://localhost:3000/api/generate
+```
+
+### Browser Usage
+
+For browser requests from a different origin, enable CORS:
+
+```javascript
+// Example: Fetch request from browser
+fetch('https://your-proxy.com/api/endpoint', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-token',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ data: 'example' })
+})
+```
+
+**Required CORS configuration:**
+```bash
+CORS_ENABLED=true
+CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com
 ```
 
 ## Endpoints
@@ -98,6 +133,10 @@ npm install
 PORT=3000
 TARGET_URL=http://localhost:8080
 BEARER_TOKEN=your-secure-token-here
+
+# Optional: Enable CORS for browser requests
+CORS_ENABLED=true
+CORS_ALLOWED_ORIGINS=http://localhost:3001,http://localhost:5173
 ```
 
 3. Start the server:
